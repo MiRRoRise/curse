@@ -1,0 +1,4 @@
+C:/CourseWork2/server/build/CMakeFiles/sqlite3.dir
+C:/CourseWork2/server/build/CMakeFiles/chat_server.dir
+C:/CourseWork2/server/build/CMakeFiles/edit_cache.dir
+C:/CourseWork2/server/build/CMakeFiles/rebuild_cache.dir
