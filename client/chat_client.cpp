@@ -34,7 +34,7 @@ ChatClient::~ChatClient()
     stop();
     webSocket->close();
     delete webSocket;
-    delete reconnectTimer; // Добавляем удаление таймера
+    delete reconnectTimer; 
 }
 
 void ChatClient::initializeWebSocket()
@@ -92,7 +92,7 @@ void ChatClient::onConnected()
 
     if (isAuthenticated) {
         QJsonObject message;
-        message["topic"] = 2; // GetChatList (унифицируем с showChatScreen)
+        message["topic"] = 2; 
         message["ty"] = 2;
         sendJsonMessage(message);
         requestFriendsList();
@@ -116,7 +116,7 @@ void ChatItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
     // Иконка для голосового чата
     bool isVoiceChat = index.data(Qt::UserRole + 1).toBool();
     if (isVoiceChat) {
-        QIcon icon(":/icons/voice_icon.png"); // Убедитесь, что иконка доступна в ресурсах
+        QIcon icon(":/icons/voice_icon.png");
         if (!icon.isNull()) {
             QPixmap pixmap = icon.pixmap(QSize(16, 16));
             painter->drawPixmap(opt.rect.left() + 5, opt.rect.top() + 5, pixmap);
@@ -130,14 +130,14 @@ void ChatItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
 
     QString text = index.data(Qt::DisplayRole).toString();
     QStringList lines = text.split("\n");
-    int textX = opt.rect.left() + (isVoiceChat ? 25 : 5); // Отступ с учетом иконки
+    int textX = opt.rect.left() + (isVoiceChat ? 25 : 5); 
     int textY = opt.rect.top() + 15;
 
     if (lines.size() >= 2) {
         painter->setPen(QColor("#FFFFFF"));
-        painter->drawText(textX, textY, opt.rect.width() - 10 - textX, 15, Qt::AlignLeft | Qt::AlignVCenter, lines[0]); // Название
+        painter->drawText(textX, textY, opt.rect.width() - 10 - textX, 15, Qt::AlignLeft | Qt::AlignVCenter, lines[0]); 
         painter->setPen(QColor("#99AAB5"));
-        painter->drawText(textX, textY + 15, opt.rect.width() - 10 - textX, 15, Qt::AlignLeft | Qt::AlignVCenter, lines[1]); // Последнее сообщение
+        painter->drawText(textX, textY + 15, opt.rect.width() - 10 - textX, 15, Qt::AlignLeft | Qt::AlignVCenter, lines[1]); 
     } else {
         painter->setPen(QColor("#FFFFFF"));
         painter->drawText(textX, textY, opt.rect.width() - 10 - textX, 30, Qt::AlignLeft | Qt::AlignVCenter, text);
@@ -150,7 +150,7 @@ QSize ChatItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QMode
 {
     Q_UNUSED(option);
     Q_UNUSED(index);
-    return QSize(200, 48); // Увеличиваем ширину для лучшего отображения текста
+    return QSize(200, 48);
 }
 
 void ChatClient::setupUi()
@@ -185,7 +185,7 @@ void ChatClient::setupUi()
     chatWidget = new QWidget(this);
     QHBoxLayout *mainLayout = new QHBoxLayout(chatWidget);
 
-    // Левая панель (аналог серверов Discord)
+    // Левая панель
     QWidget *leftPanel = new QWidget(chatWidget);
     leftPanel->setFixedWidth(70);
     QVBoxLayout *leftPanelLayout = new QVBoxLayout(leftPanel);
@@ -488,7 +488,7 @@ void ChatClient::setupUi()
 
 void ChatClient::requestChatList() {
     QJsonObject message;
-    message["topic"] = 2; // GetChatList
+    message["topic"] = 2; 
     message["ty"] = 2;
     message["user_id"] = currentUserId;
     sendJsonMessage(message);
@@ -610,16 +610,14 @@ void ChatClient::onTextMessageReceived(const QString &message)
     qDebug() << "Received message with topic:" << topic << "full message:" << message;
 
     switch (topic) {
-    case 0: // NewUser
-        // Больше не нужно обновлять userComboBox, просто игнорируем
+    case 0: 
         break;
-    case 1: // GetUserList
-        // Больше не нужно, игнорируем
+    case 1: 
         break;
     case 2: // GetChatList
         updateChatList(obj["chats"].toArray());
         break;
-    case 4: // CreateChat (исправлено с 3)
+    case 4: // CreateChat 
     {
         if (!obj.contains("chat_id") || !obj.contains("chat_name")) {
             qDebug() << "Invalid CreateChat message: missing chat_id or chat_name";
@@ -657,7 +655,7 @@ void ChatClient::onTextMessageReceived(const QString &message)
                 onChatSelected(item);
 
                 QJsonObject historyMessage;
-                historyMessage["topic"] = 6; // GetMessageList
+                historyMessage["topic"] = 6; 
                 historyMessage["ty"] = 6;
                 historyMessage["to"] = chatId;
                 sendJsonMessage(historyMessage);
@@ -733,7 +731,6 @@ void ChatClient::onTextMessageReceived(const QString &message)
                             break;
                         }
                     }
-                    // Очищаем локальную историю и displayedMessageIds
                     chatMessages.remove(currentChatId);
                     displayedMessageIds.remove(currentChatId);
                     currentChatId = -1;
@@ -796,10 +793,9 @@ void ChatClient::onTextMessageReceived(const QString &message)
                     chatListWidget->addItem(item);
                     QMessageBox::information(this, "Уведомление", QString("Вы были добавлены в чат: %1").arg(chatName));
                 }
-                // Request updated chat list and user list
                 requestChatList();
                 QJsonObject getUsersMessage;
-                getUsersMessage["topic"] = 11; // GetUserInChatList
+                getUsersMessage["topic"] = 11;
                 getUsersMessage["ty"] = 11;
                 getUsersMessage["to"] = chatId;
                 sendJsonMessage(getUsersMessage);
@@ -814,16 +810,7 @@ void ChatClient::onTextMessageReceived(const QString &message)
         }
         QJsonArray users = obj["users"].toArray();
         QMetaObject::invokeMethod(this, [this, users]() {
-            // Здесь можно обновить UI, например, список пользователей в чате
             qDebug() << "Users in chat ID" << currentChatId << ":" << users;
-            // Если есть UI-элемент для отображения пользователей, обновите его
-            // Например:
-            // userInChatListWidget->clear();
-            // for (const auto &user : users) {
-            //     QJsonObject userObj = user.toObject();
-            //     QListWidgetItem *item = new QListWidgetItem(userObj["user_name"].toString(), userInChatListWidget);
-            //     item->setData(Qt::UserRole, userObj["user_id"].toInt());
-            // }
         }, Qt::QueuedConnection);
         break;
     }
@@ -924,7 +911,7 @@ void ChatClient::onTextMessageReceived(const QString &message)
                 if (obj["status"].toString() == "success") {
                     QMetaObject::invokeMethod(this, [this]() {
                         QMessageBox::information(this, "Успех", "Друг удален");
-                        requestFriendsList(); // Refresh friend list
+                        requestFriendsList(); 
                     }, Qt::QueuedConnection);
                 }
                 break;
@@ -972,18 +959,17 @@ void ChatClient::onAcceptFriendRequestClicked()
     }
 
     QJsonObject message;
-    message["topic"] = 15; // AcceptFriendRequest
+    message["topic"] = 15; 
     message["ty"] = 15;
     message["user_id"] = currentUserId;
     message["friend_id"] = friendId;
     sendJsonMessage(message);
 
     qDebug() << "Отправлена заявка на принятие друга:" << friendId;
-    friendRequestsList->takeItem(friendRequestsList->currentRow()); // Удаляем заявку из списка
+    friendRequestsList->takeItem(friendRequestsList->currentRow()); 
     acceptFriendButton->setEnabled(false);
     rejectFriendButton->setEnabled(false);
 
-    // Обновляем список друзей после принятия
     requestFriendsList();
 }
 
@@ -1002,18 +988,17 @@ void ChatClient::onRejectFriendRequestClicked()
     }
 
     QJsonObject message;
-    message["topic"] = 16; // RejectFriendRequest
+    message["topic"] = 16;
     message["ty"] = 16;
     message["user_id"] = currentUserId;
     message["friend_id"] = friendId;
     sendJsonMessage(message);
 
     qDebug() << "Отправлена заявка на отклонение друга:" << friendId;
-    friendRequestsList->takeItem(friendRequestsList->currentRow()); // Удаляем заявку из списка
+    friendRequestsList->takeItem(friendRequestsList->currentRow()); 
     acceptFriendButton->setEnabled(false);
     rejectFriendButton->setEnabled(false);
 
-    // Обновляем список заявок (если сервер отправит обновление)
     requestFriendsList();
 }
 
@@ -1028,26 +1013,16 @@ void ChatClient::updateChatList(const QJsonArray &chats)
             QString chatName = chatObj["chat_name"].toString();
             bool isVoiceChat = chatObj["isVoiceChat"].toBool(false);
 
-            // Получаем последнее сообщение из локального хранилища
             QString lastMessage = lastMessages.value(chatId, "Нет сообщений");
-
-            // Создаем элемент списка
             QListWidgetItem *item = new QListWidgetItem();
             item->setData(Qt::UserRole, chatId);
             item->setData(Qt::UserRole + 1, isVoiceChat);
-
-            // Устанавливаем двухстрочный текст
             item->setText(chatName + "\n" + lastMessage);
-
-            // Устанавливаем высоту элемента
             item->setSizeHint(QSize(70, 48));
 
-            // Устанавливаем шрифт
             QFont font;
             font.setPointSize(10);
             item->setFont(font);
-
-            // Добавляем элемент в список
             chatListWidget->addItem(item);
 
             qDebug() << "Чат: ID =" << chatId << "Имя =" << chatName << "Голосовой =" << isVoiceChat;
@@ -1074,9 +1049,8 @@ void ChatClient::updateMessageList(const QJsonArray &messages) {
             displayedMessageIds[currentChatId].insert(msgId);
             appendMessage(msgObj["user_name"].toString(), msgObj["text"].toString(), msgObj["date"].toVariant().toLongLong());
 
-            // Ограничиваем размер хранилища
             if (chatMessages[currentChatId].size() > MAX_MESSAGES) {
-                QJsonObject oldestMsg = chatMessages[currentChatId].takeFirst(); // Убрали .toObject()
+                QJsonObject oldestMsg = chatMessages[currentChatId].takeFirst(); 
                 displayedMessageIds[currentChatId].remove(oldestMsg["msg_id"].toInt());
             }
         }
@@ -1097,12 +1071,9 @@ void ChatClient::appendMessage(const QString &userName, const QString &text, qin
 
         messageDisplay->append(formattedMessage);
 
-        // Сохраняем последнее сообщение для текущего чата
         if (currentChatId != -1) {
             lastMessages[currentChatId] = QString("%1: %2").arg(userName).arg(text);
         }
-
-        // Прокручиваем вниз
         QScrollBar *scrollBar = messageDisplay->verticalScrollBar();
         scrollBar->setValue(scrollBar->maximum());
     }, Qt::QueuedConnection);
@@ -1118,26 +1089,21 @@ void ChatClient::onChatSelected(QListWidgetItem *item) {
 
     int newChatId = item->data(Qt::UserRole).toInt();
     if (currentChatId == newChatId) {
-        // Если чат не изменился, ничего не делаем
         qDebug() << "Чат уже выбран, пропуск: chatId =" << newChatId;
         return;
     }
 
-    // Отписываемся от предыдущего чата
     if (currentChatId != -1) {
         QJsonObject unsubscribeMessage;
-        unsubscribeMessage["topic"] = 2; // Отписка
-        unsubscribeMessage["ty"] = 2; // UNSUBSCRIBE
+        unsubscribeMessage["topic"] = 2;
+        unsubscribeMessage["ty"] = 2; 
         sendJsonMessage(unsubscribeMessage);
         qDebug() << "Отписались от чата с ID:" << currentChatId;
     }
 
     currentChatId = newChatId;
-
-    // Очищаем только если чат новый
     messageDisplay->clear();
 
-    // Восстанавливаем сообщения из локального хранилища
     if (chatMessages.contains(currentChatId)) {
         for (const QJsonObject &msgObj : chatMessages[currentChatId]) {
             if (!msgObj.contains("user_name") || !msgObj.contains("text") || !msgObj.contains("date") || !msgObj.contains("msg_id")) {
@@ -1149,31 +1115,27 @@ void ChatClient::onChatSelected(QListWidgetItem *item) {
                 displayedMessageIds[currentChatId].insert(msgId);
                 appendMessage(msgObj["user_name"].toString(), msgObj["text"].toString(), msgObj["date"].toVariant().toLongLong());
             } else {
-                // Повторно отображаем уже существующие сообщения
                 appendMessage(msgObj["user_name"].toString(), msgObj["text"].toString(), msgObj["date"].toVariant().toLongLong());
             }
         }
     }
 
-    // Подписываемся на новый чат
     QJsonObject subscribeMessage;
-    subscribeMessage["topic"] = 1; // Подписка
+    subscribeMessage["topic"] = 1;
     subscribeMessage["ty"] = 1;
     subscribeMessage["to"] = currentChatId;
     sendJsonMessage(subscribeMessage);
     qDebug() << "Подписались на чат с ID:" << currentChatId;
 
-    // Запрашиваем историю сообщений, только если она не загружена
     if (!chatMessages.contains(currentChatId) || chatMessages[currentChatId].isEmpty()) {
         QJsonObject historyMessage;
-        historyMessage["topic"] = 6; // GetMessageList
+        historyMessage["topic"] = 6; 
         historyMessage["ty"] = 6;
         historyMessage["to"] = currentChatId;
         sendJsonMessage(historyMessage);
         qDebug() << "Запросили историю сообщений для чата с ID:" << currentChatId;
     }
 
-    // Сохраняем текущий чат
     QSettings settings("MyApp", "ChatClient");
     settings.setValue("currentChatId", currentChatId);
     messageInput->clear();
@@ -1192,7 +1154,6 @@ void ChatClient::onSendMessageButtonClicked() {
         return;
     }
 
-    // Проверка существования чата в chatListWidget
     bool chatExists = false;
     for (int i = 0; i < chatListWidget->count(); ++i) {
         if (chatListWidget->item(i)->data(Qt::UserRole).toInt() == currentChatId) {
@@ -1208,7 +1169,7 @@ void ChatClient::onSendMessageButtonClicked() {
     }
 
     QJsonObject message;
-    message["topic"] = 3; // NewMessage
+    message["topic"] = 3; 
     message["ty"] = 3;
     message["to"] = currentChatId;
     message["msg"] = messageText;
@@ -1230,7 +1191,7 @@ void ChatClient::onUpdateAccountButtonClicked()
     if (!ok) return;
 
     QJsonObject updateObj;
-    updateObj["ty"] = 20; // UpdateAccount
+    updateObj["ty"] = 20;
     updateObj["user_id"] = currentUserId;
     if (!newName.isEmpty()) updateObj["name"] = newName;
     if (!newPassword.isEmpty()) updateObj["password"] = newPassword;
@@ -1247,7 +1208,7 @@ void ChatClient::onDeleteVoiceChatButtonClicked()
     }
 
     QJsonObject deleteObj;
-    deleteObj["ty"] = 21; // DeleteVoiceChat
+    deleteObj["ty"] = 21; 
     deleteObj["chat_id"] = currentChatId;
     deleteObj["user_id"] = currentUserId;
     sendJsonMessage(deleteObj);
@@ -1262,10 +1223,10 @@ void ChatClient::onCreateChatButtonClicked()
     }
     bool isVoiceChat = QMessageBox::question(this, "Тип чата", "Создать голосовой чат?") == QMessageBox::Yes;
     QJsonObject message;
-    message["topic"] = 4; // CreateChat
+    message["topic"] = 4; 
     message["ty"] = 4;
     message["chatName"] = chatName;
-    message["Invited"] = QJsonArray(); // Пустой массив приглашённых
+    message["Invited"] = QJsonArray(); 
     message["isVoiceChat"] = isVoiceChat;
     sendJsonMessage(message);
     chatNameInput->clear();
@@ -1298,7 +1259,6 @@ void ChatClient::onInviteToChatButtonClicked() {
     }
     lastInviteTime = QTime::currentTime();
 
-    // Get isVoiceChat flag for the current chat
     bool isVoiceChat = false;
     for (int i = 0; i < chatListWidget->count(); ++i) {
         QListWidgetItem *chatItem = chatListWidget->item(i);
@@ -1308,9 +1268,8 @@ void ChatClient::onInviteToChatButtonClicked() {
         }
     }
 
-    // Send InviteToChat message
     QJsonObject message;
-    message["topic"] = 10; // InviteToChat
+    message["topic"] = 10; 
     message["ty"] = 10;
     QJsonArray invited;
     invited.append(friendId);
@@ -1320,9 +1279,8 @@ void ChatClient::onInviteToChatButtonClicked() {
     sendJsonMessage(message);
     qDebug() << "Sent invite for friend ID:" << friendId << "to chat ID:" << currentChatId << "isVoiceChat:" << isVoiceChat;
 
-    // Request updated user list in chat
     QJsonObject getUsersMessage;
-    getUsersMessage["topic"] = 11; // GetUserInChatList
+    getUsersMessage["topic"] = 11;
     getUsersMessage["ty"] = 11;
     getUsersMessage["to"] = currentChatId;
     sendJsonMessage(getUsersMessage);
@@ -1347,7 +1305,6 @@ void ChatClient::onFriendDoubleClicked(QListWidgetItem *item) {
     }
     lastInviteTime = QTime::currentTime();
 
-    // Get isVoiceChat flag for the current chat
     bool isVoiceChat = false;
     for (int i = 0; i < chatListWidget->count(); ++i) {
         QListWidgetItem *chatItem = chatListWidget->item(i);
@@ -1357,9 +1314,8 @@ void ChatClient::onFriendDoubleClicked(QListWidgetItem *item) {
         }
     }
 
-    // Send InviteToChat message
     QJsonObject message;
-    message["topic"] = 10; // InviteToChat
+    message["topic"] = 10; 
     message["ty"] = 10;
     QJsonArray invited;
     invited.append(friendId);
@@ -1369,9 +1325,8 @@ void ChatClient::onFriendDoubleClicked(QListWidgetItem *item) {
     sendJsonMessage(message);
     qDebug() << "Sent invite for friend ID:" << friendId << "to chat ID:" << currentChatId << "via double-click, isVoiceChat:" << isVoiceChat;
 
-    // Request updated user list in chat
     QJsonObject getUsersMessage;
-    getUsersMessage["topic"] = 11; // GetUserInChatList
+    getUsersMessage["topic"] = 11; 
     getUsersMessage["ty"] = 11;
     getUsersMessage["to"] = currentChatId;
     sendJsonMessage(getUsersMessage);
@@ -1389,10 +1344,10 @@ void ChatClient::onDeleteFromChatButtonClicked()
     }
 
     QJsonObject message;
-    message["topic"] = 7; // DeleteUserFromChat
+    message["topic"] = 7; 
     message["ty"] = 7;
     message["chatId"] = currentChatId;
-    message["userId"] = currentUserId; // Указываем, что удаляем текущего пользователя
+    message["userId"] = currentUserId; 
     sendJsonMessage(message);
 
     qDebug() << "Отправлен запрос на выход из чата ID:" << currentChatId;
@@ -1402,7 +1357,7 @@ void ChatClient::onDeleteAccountButtonClicked()
 {
     if (QMessageBox::question(this, "Confirm", "Are you sure you want to delete your account?") == QMessageBox::Yes) {
         QJsonObject message;
-        message["topic"] = 8; // DeleteUserAccount
+        message["topic"] = 8; 
         sendJsonMessage(message);
     }
 }
@@ -1415,7 +1370,7 @@ void ChatClient::sendSearchUsersRequest(const QString &searchTerm)
     }
 
     QJsonObject message;
-    message["topic"] = 12; // SearchUsersByName
+    message["topic"] = 12; 
     message["ty"] = 12;
     message["searchTerm"] = searchTerm;
     sendJsonMessage(message);
@@ -1460,7 +1415,7 @@ void ChatClient::onAddFriendButtonClicked() {
     }
 
     QJsonObject message;
-    message["topic"] = 13; // AddFriend
+    message["topic"] = 13; 
     message["ty"] = 13;
     message["user_id"] = currentUserId;
     message["friend_id"] = friendId;
@@ -1488,7 +1443,6 @@ void ChatClient::onFriendClicked(QListWidgetItem *item) {
     }
     lastInviteTime = QTime::currentTime();
 
-    // Get isVoiceChat flag for the current chat
     bool isVoiceChat = false;
     for (int i = 0; i < chatListWidget->count(); ++i) {
         QListWidgetItem *chatItem = chatListWidget->item(i);
@@ -1498,9 +1452,8 @@ void ChatClient::onFriendClicked(QListWidgetItem *item) {
         }
     }
 
-    // Send InviteToChat message
     QJsonObject message;
-    message["topic"] = 10; // InviteToChat
+    message["topic"] = 10;
     message["ty"] = 10;
     QJsonArray invited;
     invited.append(friendId);
@@ -1509,10 +1462,8 @@ void ChatClient::onFriendClicked(QListWidgetItem *item) {
     message["isVoiceChat"] = isVoiceChat;
     sendJsonMessage(message);
     qDebug() << "Sent invite for friend ID:" << friendId << "to chat ID:" << currentChatId << "isVoiceChat:" << isVoiceChat;
-
-    // Request updated user list in chat
     QJsonObject getUsersMessage;
-    getUsersMessage["topic"] = 11; // GetUserInChatList
+    getUsersMessage["topic"] = 11; 
     getUsersMessage["ty"] = 11;
     getUsersMessage["to"] = currentChatId;
     sendJsonMessage(getUsersMessage);
@@ -1522,7 +1473,7 @@ void ChatClient::onLogoutButtonClicked()
 {
     if (QMessageBox::question(this, "Подтверждение", "Выйти из аккаунта?") == QMessageBox::Yes) {
         QJsonObject message;
-        message["topic"] = 22; // Logout
+        message["topic"] = 22; 
         message["ty"] = 22;
         message["user_id"] = currentUserId;
         sendJsonMessage(message);
@@ -1539,7 +1490,7 @@ void ChatClient::requestFriendsList()
     }
 
     QJsonObject message;
-    message["topic"] = 14; // GetFriendsList
+    message["topic"] = 14; 
     message["ty"] = 14;
     message["user_id"] = currentUserId;
     sendJsonMessage(message);
@@ -1613,7 +1564,7 @@ void ChatClient::onDeleteFriendButtonClicked() {
     }
 
     QJsonObject message;
-    message["topic"] = 18; // DeleteFriend
+    message["topic"] = 18;
     message["ty"] = 18;
     message["user_id"] = currentUserId;
     message["friend_id"] = friendId;
