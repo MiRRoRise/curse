@@ -559,7 +559,7 @@ void ChatClient::showChatScreen()
             }
         }
         isShowing = false;
-        isInitialSubscription = false; /
+        isInitialSubscription = false; 
     });
 
     requestFriendsList();
