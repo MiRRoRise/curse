@@ -376,6 +376,7 @@ void ChatClient::setupUi()
 
     setCentralWidget(authWidget);
 
+    // Стиль
     setStyleSheet(R"(
         QMainWindow {
             background-color: #2C2F33;
